@@ -13,5 +13,28 @@ CHIP FullAdder {
         carry;   // Left bit of a + b + c
 
     PARTS:
-    // Put you code here:
+    // Brute force
+    // Not(in=a, out=nota);
+    // Not(in=b, out=notb);
+    // Not(in=c, out=notc);
+
+    // And(a=b, b=c, out=bandc);
+    // And3(a=a, b=notb, c=c, out=and0);
+    // And3(a=a, b=b, c=notc, out=and1);
+
+    // Or(a=bandc, b=and0, out=or0);
+    // Or(a=or0, b=and1, out=carry);
+
+    // And3(a=a, b=b, c=c, out=abc);
+    // And3(a=nota, b=notb, c=c, out=nanbc);
+    // And3(a=a, b=notb, c=notc, out=anbnc);
+    // And3(a=nota, b=b, c=notc, out=nabnc);
+
+    // Or(a=abc, b=nanbc, out=or1);
+    // Or(a=anbnc, b=nabnc, out=or2);
+    // Or(a=or1, b=or2, out=sum);
+
+    HalfAdder(a=a, b=b, sum=sum1, carry=carry1);
+    HalfAdder(a=sum1, b=c, sum=sum, carry=carry2);
+    Or(a=carry1, b=carry2, out=carry);
 }
