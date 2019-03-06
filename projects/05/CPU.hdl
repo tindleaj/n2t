@@ -28,7 +28,7 @@
 CHIP CPU {
 
     IN  inM[16],         // M value input  (M = contents of RAM[A])
-        instruction[16], // Instruction for execution
+        instruction[16] Instruction for execution
         reset;           // Signals whether to re-start the current
                          // program (reset==1) or continue executing
                          // the current program (reset==0).
@@ -40,4 +40,13 @@ CHIP CPU {
 
     PARTS:
     // Put your code here:
+
+    // x[16], y[16] 6-bit inputs        
+    //     zx zero the x input?
+    //     nx negate the x input?
+    //     zy zero the y input?
+    //     ny negate the y input?
+    //     f compute out = x + y (if 1) or x & y (if 0)
+    //     no negate the out output?
+    ALU(x=true, y=true, zx=true, nx=true, zy=true, ny=true, f=true, no=true)
 }
