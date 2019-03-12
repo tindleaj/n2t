@@ -49,4 +49,7 @@ CHIP CPU {
     //     f compute out = x + y (if 1) or x & y (if 0)
     //     no negate the out output?
     ALU(x=true, y=true, zx=true, nx=true, zy=true, ny=true, f=true, no=true)
+    
+    // Use the instruction[15] bit to determine if it's an A instruction or C instruction
+    DMux(in=, sel=, a=, b=);
 }
