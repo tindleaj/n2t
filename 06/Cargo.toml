@@ -1,0 +1,7 @@
+[package]
+name = "hack_assembler"
+version = "0.1.0"
+authors = ["Austin Tindle <tindleaj@gmail.com>"]
+edition = "2018"
+
+[dependencies]
