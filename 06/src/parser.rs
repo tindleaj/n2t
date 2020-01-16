@@ -1,5 +1,9 @@
+use crate::code;
+
+use std::char;
 use std::collections::HashMap;
 use std::fs;
+use std::io::Write;
 
 const SYMBOL_TABLE: [(&str, &str); 22] = [
   ("SP", "0"),
@@ -27,9 +31,12 @@ const SYMBOL_TABLE: [(&str, &str); 22] = [
 ];
 
 enum CommandType {
-  A_COMMAND,
-  C_COMMAND,
-  L_COMMAND,
+  /// For @xxx where xxx is a symbol or decimal number
+  ACommand,
+  /// For lines that follow the form `dest=comp;jump`
+  CCommand,
+  /// Psuedo-command for (xxx) where xxx is a symbol
+  LCommand,
 }
 
 pub struct Parser {
@@ -41,25 +48,70 @@ pub struct Parser {
 
 impl Parser {
   pub fn parse(path: &str) {
-    let input = match fs::read_to_string(path) {
-      Ok(value) => value,
-      Err(e) => panic!(e),
-    };
+    let input = fs::read_to_string(path).expect("problem reading path to string");
+    let mut output = fs::File::create("output.hack").expect("problem creating file 'output.hack'");
 
-    for line in input.split('\n') {
-      if line.len() < 1 {
+    for line in input.lines() {
+      let line = line.trim();
+
+      if line.is_empty() {
         continue;
       }
 
-      if &line[0..2] == "//" {
+      if line.starts_with("//") {
         continue;
       }
+
+      dbg!(&line);
 
       match Parser::command_type(line) {
         Some(command) => match command {
-          CommandType::A_COMMAND => println!("A Command"),
-          CommandType::C_COMMAND => println!("C Command"),
-          CommandType::L_COMMAND => println!("L Command"),
+          CommandType::ACommand => {
+            let symbol: u16 = line.trim().trim_matches('@').parse().unwrap();
+            let bin_symbol = format!("{:b}", symbol);
+            let mut buf = Vec::new();
+
+            writeln!(&mut buf, "{:0>16}", bin_symbol).expect("problem writing to buffer");
+
+            output.write(&buf).expect("problem writing to file");
+          }
+          CommandType::CCommand => {
+            let mut tokens: Vec<&str> = line.split(|c| c == '=' || c == ';').collect();
+            let mut buf = Vec::new();
+
+            // Add null ops to short commands
+            if !line.contains('=') {
+              tokens.insert(0, "null");
+            }
+
+            if !line.contains(';') {
+              tokens.insert(2, "null")
+            }
+
+            let dest = match tokens.get(0) {
+              Some(v) => code::dest(v).expect("invalid DEST token"),
+              None => code::dest("null").unwrap(),
+            };
+
+            let comp = match tokens.get(1) {
+              Some(v) => {
+                dbg!(&v);
+                code::comp(v).expect("invalid COMP token")
+              }
+              None => code::comp("null").unwrap(),
+            };
+
+            let jump = match tokens.get(2) {
+              Some(v) => code::jump(v).expect("invalid JUMP token"),
+              None => code::jump("null").unwrap(),
+            };
+
+            let bin_line = format!("111{}{}{}", comp, dest, jump);
+            writeln!(&mut buf, "{:0>16}", bin_line).expect("problem writing to buffer");
+
+            output.write(&buf).expect("problem writing to file");
+          }
+          CommandType::LCommand => println!("L Command"),
         },
         None => println!("No command"),
       }
@@ -70,13 +122,14 @@ impl Parser {
     unimplemented!()
   }
 
+  /// Returns the type of a command
   fn command_type(line: &str) -> Option<CommandType> {
-    if &line[0..1] == "@" {
-      return Some(CommandType::A_COMMAND);
-    } else if &line[0..1] == "(" {
-      return Some(CommandType::L_COMMAND);
-    } else if line.contains("=") {
-      return Some(CommandType::C_COMMAND);
+    if line.trim().starts_with("@") {
+      return Some(CommandType::ACommand);
+    } else if line.trim().starts_with("(") {
+      return Some(CommandType::LCommand);
+    } else if code::contains_comp(line) {
+      return Some(CommandType::CCommand);
     }
 
     None

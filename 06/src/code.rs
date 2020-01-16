@@ -1,4 +1,4 @@
-const JUMP_TABLE: [(&str, &str); 8] = [
+const DEST_TABLE: [(&str, &str); 8] = [
   ("null", "000"),
   ("M", "001"),
   ("D", "010"),
@@ -9,7 +9,7 @@ const JUMP_TABLE: [(&str, &str); 8] = [
   ("AMD", "111"),
 ];
 
-const DEST_TABLE: [(&str, &str); 8] = [
+const JUMP_TABLE: [(&str, &str); 8] = [
   ("null", "000"),
   ("JGT", "001"),
   ("JEQ", "010"),
@@ -51,3 +51,40 @@ const COMP_TABLE: [(&str, &str); 29] = [
   ("D&M", "1000000"),
   ("D|M", "1010101"),
 ];
+
+pub fn dest(key: &str) -> Option<&str> {
+  for pair in DEST_TABLE.iter() {
+    if pair.0 == key {
+      return Some(pair.1);
+    }
+  }
+  None
+}
+
+pub fn jump(key: &str) -> Option<&str> {
+  for pair in JUMP_TABLE.iter() {
+    if pair.0 == key {
+      return Some(pair.1);
+    }
+  }
+  None
+}
+
+pub fn comp(key: &str) -> Option<&str> {
+  for pair in COMP_TABLE.iter() {
+    if pair.0 == key {
+      return Some(pair.1);
+    }
+  }
+  None
+}
+
+pub fn contains_comp(line: &str) -> bool {
+  for pair in COMP_TABLE.iter() {
+    if line.contains(pair.0) {
+      return true;
+    }
+  }
+
+  false
+}
