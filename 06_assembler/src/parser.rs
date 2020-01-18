@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 
-const SYMBOL_TABLE: [(&str, &str); 22] = [
+const PREDEFINED_SYMBOLS: [(&str, &str); 22] = [
   ("SP", "0"),
   ("LCL", "1"),
   ("ARG", "2"),
@@ -30,21 +30,7 @@ const SYMBOL_TABLE: [(&str, &str); 22] = [
   ("KBD", "24567"),
 ];
 
-enum CommandType {
-  /// For @xxx where xxx is a symbol or decimal number
-  ACommand,
-  /// For lines that follow the form `dest=comp;jump`
-  CCommand,
-  /// Psuedo-command for (xxx) where xxx is a symbol
-  LCommand,
-}
-
-pub struct Parser {
-  symbol: String,
-  dest: String,
-  comp: String,
-  jump: String,
-}
+pub struct Parser {}
 
 impl Parser {
   pub fn parse(path: &str) {
@@ -61,8 +47,6 @@ impl Parser {
       if line.starts_with("//") {
         continue;
       }
-
-      dbg!(&line);
 
       match Parser::command_type(line) {
         Some(command) => match command {
@@ -118,10 +102,6 @@ impl Parser {
     }
   }
 
-  fn advance() {
-    unimplemented!()
-  }
-
   /// Returns the type of a command
   fn command_type(line: &str) -> Option<CommandType> {
     if line.trim().starts_with("@") {
@@ -134,10 +114,15 @@ impl Parser {
 
     None
   }
+}
 
-  fn has_more_commands() -> bool {
-    unimplemented!()
-  }
+enum CommandType {
+  /// For @xxx where xxx is a symbol or decimal number
+  ACommand,
+  /// For lines that follow the form `dest=comp;jump`
+  CCommand,
+  /// Psuedo-command for (xxx) where xxx is a symbol
+  LCommand,
 }
 
 #[cfg(test)]
