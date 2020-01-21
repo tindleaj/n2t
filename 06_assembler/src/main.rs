@@ -1,5 +1,6 @@
 mod code;
 mod parser;
+mod symbol_table;
 
 use parser::Parser;
 
