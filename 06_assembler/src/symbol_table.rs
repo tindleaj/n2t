@@ -25,30 +25,33 @@ const SYMBOLS: [(&str, &str); 22] = [
   ("KBD", "24567"),
 ];
 
-struct SymbolTable<'a> {
-  table: HashMap<&'a str, &'a str>,
+pub struct SymbolTable {
+  table: HashMap<String, String>,
 }
 
-impl<'a> SymbolTable<'a> {
-  pub fn new() -> SymbolTable<'a> {
-    let table = SYMBOLS.iter().cloned().collect();
+impl SymbolTable {
+  pub fn new() -> SymbolTable {
+    let table = SYMBOLS
+      .iter()
+      .map(|pair| (pair.0.to_string(), pair.1.to_string()))
+      .collect();
 
     SymbolTable { table }
   }
 
-  pub fn add_entry() {
-    unimplemented!()
+  pub fn add_entry(&mut self, symbol: &str, value: &str) {
+    self.table.insert(symbol.into(), value.into());
   }
 
   pub fn contains(&self, key: &str) -> bool {
     match &self.table.get(key) {
-      Some(val) => return true,
+      Some(_val) => return true,
       None => return false,
     }
   }
 
-  pub fn get_addr() {
-    unimplemented!()
+  pub fn get_addr(&self, key: &str) -> &str {
+    &self.table.get(key).unwrap()
   }
 }
 
@@ -59,12 +62,32 @@ mod tests {
   #[test]
   fn creates_new_table() {
     let t = SymbolTable::new();
-    assert_eq!(t.table, SYMBOLS.iter().cloned().collect())
+    assert_eq!(
+      t.table,
+      SYMBOLS
+        .iter()
+        .map(|pair| (pair.0.to_string(), pair.1.to_string()))
+        .collect()
+    );
   }
 
-  fn gets_value_for_existing_key() {
+  #[test]
+  fn checks_if_val_exists() {
     let t = SymbolTable::new();
     assert_eq!(t.contains("R1"), true);
     assert_eq!(t.contains("Fooey"), false);
+  }
+
+  #[test]
+  fn adds_entry() {
+    let mut t = SymbolTable::new();
+    t.add_entry("test", "value");
+    assert_eq!(t.contains("test"), true)
+  }
+
+  #[test]
+  fn gets_value_at_address() {
+    let t = SymbolTable::new();
+    assert_eq!(t.get_addr("SP"), "0");
   }
 }
