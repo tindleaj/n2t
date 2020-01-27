@@ -1,3 +1,4 @@
 **/*.dat
 **/target
+**/files
 .DS_Store
