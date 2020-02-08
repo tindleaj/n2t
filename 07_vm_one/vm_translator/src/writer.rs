@@ -4,53 +4,58 @@ use std::io::Write;
 
 pub struct Writer {
   pub output: Vec<u8>,
+  jump_index: usize,
 }
 
 impl Writer {
   pub fn new() -> Writer {
-    Writer { output: Vec::new() }
+    Writer {
+      output: Vec::new(),
+      jump_index: 0,
+    }
   }
 
   pub fn write_math(&mut self, command: MathCommand) {
     use MathCommand::*;
 
     match command {
-      Add => self.write(&format!(
-        "// add the top two items on the stack
-        // Set first arg to *R13
-        @SP
-        A=M-1
-        D=M
-        @R13
-        M=D
+      Add => {
+        self.writeln("// add the top two items on the stack");
 
-        // Set D to second arg
-        @SP
-        D=M-1
-        D=D-1
-        A=D
-        D=M
+        self.writeln("// Set first arg to *R13");
+        self.writeln("@SP");
+        self.writeln("A=M-1");
+        self.writeln("D=M");
+        self.writeln("@R13");
+        self.writeln("M=D");
 
-        // Add
-        @R13
-        D=D+M
-        M=D
+        self.writeln("// Set D to second arg");
+        self.writeln("@SP");
+        self.writeln("D=M-1");
+        self.writeln("D=D-1");
+        self.writeln("A=D");
+        self.writeln("D=M");
 
-        // Put sum in *(SP - 2)
-        @SP
-        M=M-1
-        M=M-1
-        @R13
-        D=M
-        @SP
-        A=M
-        M=D
+        self.writeln("// Add");
+        self.writeln("@R13");
+        self.writeln("D=D+M");
+        self.writeln("M=D");
 
-        // Move SP up by one
-        @SP
-        M=M+1"
-      )),
-      Subtract => self.write(&format!(
+        self.writeln("// Put sum in *(SP - 2)");
+        self.writeln("@SP");
+        self.writeln("M=M-1");
+        self.writeln("M=M-1");
+        self.writeln("@R13");
+        self.writeln("D=M");
+        self.writeln("@SP");
+        self.writeln("A=M");
+        self.writeln("M=D");
+
+        self.writeln("// Move SP up by one");
+        self.writeln("@SP");
+        self.writeln("M=M+1");
+      }
+      Subtract => self.writeln(
         "// sub
         @SP
         A=M-1
@@ -78,19 +83,20 @@ impl Writer {
         M=D
         
         @SP
-        M=M+1"
-      )),
-      Negate => self.write(&format!(
+        M=M+1",
+      ),
+      Negate => self.writeln(
         "// negate
         @SP
         A=M-1
         D=-M
         @SP
         A=M-1
-        M=D"
-      )),
-      EqualTo => self.write(&format!(
-        "// eq
+        M=D",
+      ),
+      EqualTo => {
+        let formatted = format!(
+          "// eq
         // Set first arg to *R13
         @SP
         A=M-1
@@ -110,23 +116,12 @@ impl Writer {
         D=D-M
         
         // jump if eq
-        @EQ
+        @EQ_{index}
         D;JEQ
-        @NEQ
+        @NEQ_{index}
         0;JMP
         
-        (EQ)
-        D=-1
-        @SP
-        M=M-1
-        M=M-1
-        @SP
-        A=M
-        M=D
-        @END
-        0;JMP
-        
-        (NEQ)
+        (EQ_{index})
         D=0
         @SP
         M=M-1
@@ -134,38 +129,10 @@ impl Writer {
         @SP
         A=M
         M=D
-        
-        (END)
-        @SP
-        M=M+1"
-      )),
-      GreaterThan => self.write(&format!(
-        "// gt
-        // Set first arg to *R13
-        @SP
-        A=M-1
-        D=M
-        @R13
-        M=D
-        
-        // Set D to second arg
-        @SP
-        D=M-1
-        D=D-1
-        A=D
-        D=M
-        
-        // Subtract to check equality
-        @R13
-        D=D-M
-        
-        // jump if gt
-        @GT
-        D;JGT
-        @NGT
+        @END_{index}
         0;JMP
         
-        (GT)
+        (NEQ_{index})
         D=-1
         @SP
         M=M-1
@@ -173,24 +140,75 @@ impl Writer {
         @SP
         A=M
         M=D
-        @END
-        0;JMP
         
-        (NGT)
-        D=0
+        (END_{index})
         @SP
-        M=M-1
-        M=M-1
-        @SP
-        A=M
-        M=D
-        
-        (END)
-        @SP
-        M=M+1"
-      )),
-      LessThan => self.write(&format!(
-        "// lt
+        M=M+1",
+          index = self.jump_index
+        );
+
+        self.jump_index += 1;
+        self.writeln(&formatted)
+      }
+      GreaterThan => {
+        let formatted = format!(
+          "// gt
+      // Set first arg to *R13
+      @SP
+      A=M-1
+      D=M
+      @R13
+      M=D
+      
+      // Set D to second arg
+      @SP
+      D=M-1
+      D=D-1
+      A=D
+      D=M
+      
+      // Subtract to check equality
+      @R13
+      D=D-M
+      
+      // jump if gt
+      @GT_{index}
+      D;JGT
+      @NGT_{index}
+      0;JMP
+      
+      (GT_{index})
+      D=-1
+      @SP
+      M=M-1
+      M=M-1
+      @SP
+      A=M
+      M=D
+      @END_{index}
+      0;JMP
+      
+      (NGT_{index})
+      D=0
+      @SP
+      M=M-1
+      M=M-1
+      @SP
+      A=M
+      M=D
+      
+      (END_{index})
+      @SP
+      M=M+1",
+          index = self.jump_index
+        );
+
+        self.jump_index += 1;
+        self.writeln(&formatted);
+      }
+      LessThan => {
+        let formatted = format!(
+          "// lt
         // Set first arg to *R13
         @SP
         A=M-1
@@ -210,12 +228,12 @@ impl Writer {
         D=D-M
         
         // jump if lt
-        @LT
+        @LT_{index}
         D;JLT
-        @NLT
+        @NLT_{index}
         0;JMP
         
-        (LT)
+        (LT_{index})
         D=-1
         @SP
         M=M-1
@@ -223,10 +241,10 @@ impl Writer {
         @SP
         A=M
         M=D
-        @END
+        @END_{index}
         0;JMP
         
-        (NLT)
+        (NLT_{index})
         D=0
         @SP
         M=M-1
@@ -235,11 +253,16 @@ impl Writer {
         A=M
         M=D
         
-        (END)
+        (END_{index})
         @SP
-        M=M+1"
-      )),
-      And => self.write(&format!(
+        M=M+1",
+          index = self.jump_index
+        );
+
+        self.jump_index += 1;
+        self.writeln(&formatted);
+      }
+      And => self.writeln(
         "// and
         @SP
         A=M-1
@@ -267,9 +290,9 @@ impl Writer {
         M=D
         
         @SP
-        M=M+1"
-      )),
-      Or => self.write(&format!(
+        M=M+1",
+      ),
+      Or => self.writeln(
         "// or
         @SP
         A=M-1
@@ -297,30 +320,29 @@ impl Writer {
         M=D
         
         @SP
-        M=M+1"
-      )),
-      Not => self.write(&format!(
+        M=M+1",
+      ),
+      Not => self.writeln(
         "// logical not
         @SP
         A=M-1
         D=!M
         @SP
         A=M-1
-        M=D"
-      )),
+        M=D",
+      ),
     }
   }
 
   pub fn write_push_pop(&mut self, command: MemoryCommand, segment: MemorySegment, index: usize) {
     use MemoryCommand::*;
     use MemorySegment::*;
-
     match command {
       Push => match segment {
         Argument => unimplemented!(),
         Local => unimplemented!(),
         Static => unimplemented!(),
-        Constant => self.write(&format!(
+        Constant => self.writeln(&format!(
           "// push constant {index}
           // set D to {index}
           @{index}
@@ -349,7 +371,7 @@ impl Writer {
     }
   }
 
-  fn write(&mut self, content: &str) {
+  fn writeln(&mut self, content: &str) {
     writeln!(self.output, "{}", content).expect("problem writing to buffer");
   }
 }
@@ -359,7 +381,11 @@ mod tests {
   use super::*;
 
   #[test]
-  fn name() {
-    unimplemented!();
+  fn writes_output_with_newlines() {
+    let mut writer = Writer::new();
+    writer.writeln("@SP");
+    writer.writeln("M=D");
+
+    assert_eq!(std::str::from_utf8(&writer.output).unwrap(), "@SP\nM=D\n");
   }
 }
