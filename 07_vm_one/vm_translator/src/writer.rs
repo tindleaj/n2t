@@ -97,25 +97,25 @@ impl Writer {
       EqualTo => {
         let formatted = format!(
           "// eq
-        // Set first arg to *R13
+        // Set *R13 'y' arg to
         @SP
         A=M-1
         D=M
         @R13
         M=D
         
-        // Set D to second arg
+        // Set D to 'x' arg
         @SP
         D=M-1
         D=D-1
         A=D
         D=M
         
-        // Subtract to check equality
+        // Subtract x - y
         @R13
         D=D-M
         
-        // jump if eq
+        // jump if result = 0
         @EQ_{index}
         D;JEQ
         @NEQ_{index}
@@ -153,32 +153,32 @@ impl Writer {
       GreaterThan => {
         let formatted = format!(
           "// gt
-      // Set first arg to *R13
+      // Set 'y' arg to *R13
       @SP
       A=M-1
       D=M
       @R13
       M=D
       
-      // Set D to second arg
+      // Set D to 'x' arg
       @SP
       D=M-1
       D=D-1
       A=D
       D=M
       
-      // Subtract to check equality
+      // Subtract x - y
       @R13
       D=D-M
       
-      // jump if gt
+      // jump if result > 0
       @GT_{index}
       D;JGT
       @NGT_{index}
       0;JMP
       
       (GT_{index})
-      D=-1
+      D=0
       @SP
       M=M-1
       M=M-1
@@ -189,7 +189,7 @@ impl Writer {
       0;JMP
       
       (NGT_{index})
-      D=0
+      D=-1
       @SP
       M=M-1
       M=M-1
@@ -209,32 +209,32 @@ impl Writer {
       LessThan => {
         let formatted = format!(
           "// lt
-        // Set first arg to *R13
+        // Set 'y' arg to *R13
         @SP
         A=M-1
         D=M
         @R13
         M=D
         
-        // Set D to second arg
+        // Set D to 'x' arg
         @SP
         D=M-1
         D=D-1
         A=D
         D=M
         
-        // Subtract to check equality
+        // Subtract x - y
         @R13
         D=D-M
         
-        // jump if lt
+        // jump if result < 0
         @LT_{index}
         D;JLT
         @NLT_{index}
         0;JMP
         
         (LT_{index})
-        D=-1
+        D=0
         @SP
         M=M-1
         M=M-1
@@ -245,7 +245,7 @@ impl Writer {
         0;JMP
         
         (NLT_{index})
-        D=0
+        D=-1
         @SP
         M=M-1
         M=M-1
