@@ -122,7 +122,7 @@ impl Writer {
         0;JMP
         
         (EQ_{index})
-        D=0
+        D=-1
         @SP
         M=M-1
         M=M-1
@@ -133,7 +133,7 @@ impl Writer {
         0;JMP
         
         (NEQ_{index})
-        D=-1
+        D=0
         @SP
         M=M-1
         M=M-1
@@ -178,7 +178,7 @@ impl Writer {
       0;JMP
       
       (GT_{index})
-      D=0
+      D=-1
       @SP
       M=M-1
       M=M-1
@@ -189,7 +189,7 @@ impl Writer {
       0;JMP
       
       (NGT_{index})
-      D=-1
+      D=0
       @SP
       M=M-1
       M=M-1
@@ -234,7 +234,7 @@ impl Writer {
         0;JMP
         
         (LT_{index})
-        D=0
+        D=-1
         @SP
         M=M-1
         M=M-1
@@ -245,7 +245,7 @@ impl Writer {
         0;JMP
         
         (NLT_{index})
-        D=-1
+        D=0
         @SP
         M=M-1
         M=M-1
