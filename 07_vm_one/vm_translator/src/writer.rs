@@ -1,5 +1,5 @@
 use crate::parser::{MathCommand, MemoryCommand, MemorySegment};
-use std::fs::File;
+use std::collections::HashMap;
 use std::io::Write;
 
 pub struct Writer {
@@ -96,7 +96,7 @@ impl Writer {
       ),
       EqualTo => {
         let formatted = format!(
-          "// eq
+          r"// eq
         // Set *R13 'y' arg to
         @SP
         A=M-1
@@ -153,53 +153,53 @@ impl Writer {
       GreaterThan => {
         let formatted = format!(
           "// gt
-      // Set 'y' arg to *R13
-      @SP
-      A=M-1
-      D=M
-      @R13
-      M=D
-      
-      // Set D to 'x' arg
-      @SP
-      D=M-1
-      D=D-1
-      A=D
-      D=M
-      
-      // Subtract x - y
-      @R13
-      D=D-M
-      
-      // jump if result > 0
-      @GT_{index}
-      D;JGT
-      @NGT_{index}
-      0;JMP
-      
-      (GT_{index})
-      D=-1
-      @SP
-      M=M-1
-      M=M-1
-      @SP
-      A=M
-      M=D
-      @END_{index}
-      0;JMP
-      
-      (NGT_{index})
-      D=0
-      @SP
-      M=M-1
-      M=M-1
-      @SP
-      A=M
-      M=D
-      
-      (END_{index})
-      @SP
-      M=M+1",
+          // Set 'y' arg to *R13
+          @SP
+          A=M-1
+          D=M
+          @R13
+          M=D
+          
+          // Set D to 'x' arg
+          @SP
+          D=M-1
+          D=D-1
+          A=D
+          D=M
+          
+          // Subtract x - y
+          @R13
+          D=D-M
+          
+          // jump if result > 0
+          @GT_{index}
+          D;JGT
+          @NGT_{index}
+          0;JMP
+          
+          (GT_{index})
+          D=-1
+          @SP
+          M=M-1
+          M=M-1
+          @SP
+          A=M
+          M=D
+          @END_{index}
+          0;JMP
+          
+          (NGT_{index})
+          D=0
+          @SP
+          M=M-1
+          M=M-1
+          @SP
+          A=M
+          M=D
+          
+          (END_{index})
+          @SP
+          M=M+1",
           index = self.jump_index
         );
 
@@ -209,53 +209,53 @@ impl Writer {
       LessThan => {
         let formatted = format!(
           "// lt
-        // Set 'y' arg to *R13
-        @SP
-        A=M-1
-        D=M
-        @R13
-        M=D
-        
-        // Set D to 'x' arg
-        @SP
-        D=M-1
-        D=D-1
-        A=D
-        D=M
-        
-        // Subtract x - y
-        @R13
-        D=D-M
-        
-        // jump if result < 0
-        @LT_{index}
-        D;JLT
-        @NLT_{index}
-        0;JMP
-        
-        (LT_{index})
-        D=-1
-        @SP
-        M=M-1
-        M=M-1
-        @SP
-        A=M
-        M=D
-        @END_{index}
-        0;JMP
-        
-        (NLT_{index})
-        D=0
-        @SP
-        M=M-1
-        M=M-1
-        @SP
-        A=M
-        M=D
-        
-        (END_{index})
-        @SP
-        M=M+1",
+          // Set 'y' arg to *R13
+          @SP
+          A=M-1
+          D=M
+          @R13
+          M=D
+          
+          // Set D to 'x' arg
+          @SP
+          D=M-1
+          D=D-1
+          A=D
+          D=M
+          
+          // Subtract x - y
+          @R13
+          D=D-M
+          
+          // jump if result < 0
+          @LT_{index}
+          D;JLT
+          @NLT_{index}
+          0;JMP
+          
+          (LT_{index})
+          D=-1
+          @SP
+          M=M-1
+          M=M-1
+          @SP
+          A=M
+          M=D
+          @END_{index}
+          0;JMP
+          
+          (NLT_{index})
+          D=0
+          @SP
+          M=M-1
+          M=M-1
+          @SP
+          A=M
+          M=D
+          
+          (END_{index})
+          @SP
+          M=M+1",
           index = self.jump_index
         );
 
@@ -374,6 +374,10 @@ impl Writer {
   fn writeln(&mut self, content: &str) {
     writeln!(self.output, "{}", content).expect("problem writing to buffer");
   }
+}
+
+struct VirtualMemory {
+  // pub
 }
 
 #[cfg(test)]
