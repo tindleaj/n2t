@@ -15,6 +15,12 @@ impl Writer {
     }
   }
 
+  /// Writes ASM to self.output that increments the stack pointer by 1
+  fn write_inc_sp(&mut self) {
+    self.writeln("@SP");
+    self.writeln("M=M+1");
+  }
+
   pub fn write_math(&mut self, command: MathCommand) {
     use MathCommand::*;
 
@@ -51,12 +57,11 @@ impl Writer {
         self.writeln("A=M");
         self.writeln("M=D");
 
-        self.writeln("// Move SP up by one");
-        self.writeln("@SP");
-        self.writeln("M=M+1");
+        self.write_inc_sp();
       }
-      Subtract => self.writeln(
-        "// sub
+      Subtract => {
+        self.writeln(
+          "// sub
         @SP
         A=M-1
         D=M
@@ -80,11 +85,10 @@ impl Writer {
         D=M
         @SP
         A=M
-        M=D
-        
-        @SP
-        M=M+1",
-      ),
+        M=D",
+        );
+        self.write_inc_sp();
+      }
       Negate => self.writeln(
         "// negate
         @SP
@@ -262,8 +266,9 @@ impl Writer {
         self.jump_index += 1;
         self.writeln(&formatted);
       }
-      And => self.writeln(
-        "// and
+      And => {
+        self.writeln(
+          "// and
         @SP
         A=M-1
         D=M
@@ -287,13 +292,13 @@ impl Writer {
         D=M
         @SP
         A=M
-        M=D
-        
-        @SP
-        M=M+1",
-      ),
-      Or => self.writeln(
-        "// or
+        M=D",
+        );
+        self.write_inc_sp();
+      }
+      Or => {
+        self.writeln(
+          "// or
         @SP
         A=M-1
         D=M
@@ -317,11 +322,11 @@ impl Writer {
         D=M
         @SP
         A=M
-        M=D
-        
-        @SP
-        M=M+1",
-      ),
+        M=D",
+        );
+
+        self.write_inc_sp();
+      }
       Not => self.writeln(
         "// logical not
         @SP
@@ -339,7 +344,11 @@ impl Writer {
     use MemorySegment::*;
     match command {
       Push => match segment {
-        Argument => unimplemented!(),
+        Argument => {
+          self.writeln(&format!("push arg {}", index));
+          self.writeln("@ARG");
+          self.writeln(&format!("D=M+{}", index))
+        }
         Local => unimplemented!(),
         Static => unimplemented!(),
         Constant => self.writeln(&format!(
@@ -365,8 +374,14 @@ impl Writer {
       },
 
       Pop => match segment {
+        Argument => unimplemented!(),
+        Local => unimplemented!(),
+        Static => unimplemented!(),
         Constant => panic!("cannot pop to the constant segment"),
-        _ => unimplemented!(),
+        This => unimplemented!(),
+        That => unimplemented!(),
+        Pointer => unimplemented!(),
+        Temp => unimplemented!(),
       },
     }
   }
@@ -374,10 +389,6 @@ impl Writer {
   fn writeln(&mut self, content: &str) {
     writeln!(self.output, "{}", content).expect("problem writing to buffer");
   }
-}
-
-struct VirtualMemory {
-  // pub
 }
 
 #[cfg(test)]
