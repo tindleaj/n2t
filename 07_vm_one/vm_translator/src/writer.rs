@@ -459,7 +459,7 @@ impl Writer {
       Pop => match segment {
         Argument => {
           self.writeln(&format!("// pop argument {}", index));
-          // set R13 to ARG+index
+          // set R13 to *ARG+index
           self.writeln(&format!("@{}", index));
           self.writeln("D=A");
           self.writeln("@ARG");
@@ -473,7 +473,7 @@ impl Writer {
         }
         Local => {
           self.writeln(&format!("// pop local {}", index));
-          // set R13 to LCL+index
+          // set R13 to *LCL+index
           self.writeln(&format!("@{}", index));
           self.writeln("D=A");
           self.writeln("@LCL");
@@ -489,7 +489,7 @@ impl Writer {
         Constant => panic!("cannot pop to the constant segment"),
         This => {
           self.writeln(&format!("// pop this {}", index));
-          // set R13 to THIS+index
+          // set R13 to *THIS+index
           self.writeln(&format!("@{}", index));
           self.writeln("D=A");
           self.writeln("@THIS");
@@ -503,7 +503,7 @@ impl Writer {
         }
         That => {
           self.writeln(&format!("// pop that {}", index));
-          // set R13 to THAT+index
+          // set R13 to *THAT+index
           self.writeln(&format!("@{}", index));
           self.writeln("D=A");
           self.writeln("@THAT");
@@ -515,8 +515,34 @@ impl Writer {
 
           self.write_dec_sp();
         }
-        Pointer => unimplemented!(),
-        Temp => unimplemented!(),
+        Pointer => {
+          self.writeln(&format!("// pop pointer {}", index));
+          // set R13 to 3+index
+          self.writeln(&format!("@{}", index));
+          self.writeln("D=A");
+          self.writeln("@3");
+          self.writeln("D=D+A");
+          self.writeln("@R13");
+          self.writeln("M=D");
+
+          self.write_copy_stack_head_indirect("@R13");
+
+          self.write_dec_sp();
+        }
+        Temp => {
+          self.writeln(&format!("// pop temp {}", index));
+          // set R13 to 5+index
+          self.writeln(&format!("@{}", index));
+          self.writeln("D=A");
+          self.writeln("@5");
+          self.writeln("D=D+A");
+          self.writeln("@R13");
+          self.writeln("M=D");
+
+          self.write_copy_stack_head_indirect("@R13");
+
+          self.write_dec_sp();
+        }
       },
     }
   }
