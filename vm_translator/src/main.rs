@@ -44,6 +44,16 @@ mod lib {
 
                     writer.write_push_pop(command, segment, index)
                 }
+                CommandType::Branching(command) => {
+                    use parser::BranchingCommand::*;
+                    let label = Parser::first_arg(line);
+
+                    match command {
+                        Label => writer.write_label(label),
+                        If => writer.write_if(label),
+                        Goto => writer.write_goto(label),
+                    }
+                }
                 _ => unimplemented!(),
             }
         }

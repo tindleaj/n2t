@@ -1,5 +1,4 @@
 use crate::parser::{MathCommand, MemoryCommand, MemorySegment};
-use std::collections::HashMap;
 use std::io::Write;
 
 pub struct Writer {
@@ -17,62 +16,33 @@ impl Writer {
     }
   }
 
-  /// Writes ASM to self.output that increments the stack pointer by 1
-  fn write_inc_sp(&mut self) {
-    self.writeln("@SP");
-    self.writeln("M=M+1");
-  }
-  /// Writes ASM to self.output that decrements the stack pointer by 1
-  fn write_dec_sp(&mut self) {
-    self.writeln("@SP");
-    self.writeln("M=M-1");
-  }
-
-  /// Writes ASM to self.output that sets the value of *SP to the contents of the D register
-  fn write_dreg_to_stack(&mut self) {
-    self.writeln("@SP");
-    self.writeln("A=M");
-    self.writeln("M=D");
-  }
-
-  /// Copies top item on stack to address value at register provided
-  fn write_copy_stack_head_indirect(&mut self, register: &str) {
-    // Copy SP-1 into *R13
-    self.writeln("@SP");
-    self.writeln("A=M-1");
-    self.writeln("D=M");
-    self.writeln(&format!("{}", register));
-    self.writeln("A=M");
-    self.writeln("M=D");
-  }
-
   pub fn write_math(&mut self, command: MathCommand) {
     use MathCommand::*;
 
     match command {
       Add => {
-        self.writeln("// add the top two items on the stack");
+        self.writeln("// add");
 
-        self.writeln("// Set first arg to *R13");
+        // Set *R13 to the first argument
         self.writeln("@SP");
         self.writeln("A=M-1");
         self.writeln("D=M");
         self.writeln("@R13");
         self.writeln("M=D");
 
-        self.writeln("// Set D to second arg");
+        // Set D register to the second argument
         self.writeln("@SP");
         self.writeln("D=M-1");
         self.writeln("D=D-1");
         self.writeln("A=D");
         self.writeln("D=M");
 
-        self.writeln("// Add");
+        // Add *R13 + D
         self.writeln("@R13");
         self.writeln("D=D+M");
         self.writeln("M=D");
 
-        self.writeln("// Put sum in *(SP - 2)");
+        // Put sum in *(SP - 2)
         self.writeln("@SP");
         self.writeln("M=M-1");
         self.writeln("M=M-1");
@@ -567,6 +537,60 @@ impl Writer {
         }
       },
     }
+  }
+
+  pub fn write_if(&mut self, label: &str) {
+    self.writeln(&format!("// if-goto {}", label));
+
+    // Put value at top of stack in D register
+    self.writeln("@SP");
+    self.writeln("A=M-1");
+    self.writeln("D=M");
+
+    self.write_dec_sp();
+
+    // Conditional jump (*D != 0)
+    self.writeln(&format!("@{}", label));
+    self.writeln("D;JNE");
+  }
+
+  pub fn write_goto(&mut self, label: &str) {
+    self.writeln(&format!("// goto {}", label));
+    self.writeln(&format!("@{}", label));
+  }
+
+  pub fn write_label(&mut self, label: &str) {
+    self.writeln(&format!("// label {}", label));
+    self.writeln(&format!("({})", label));
+  }
+
+  /// Writes ASM to self.output that increments the stack pointer by 1
+  fn write_inc_sp(&mut self) {
+    self.writeln("@SP");
+    self.writeln("M=M+1");
+  }
+  /// Writes ASM to self.output that decrements the stack pointer by 1
+  fn write_dec_sp(&mut self) {
+    self.writeln("@SP");
+    self.writeln("M=M-1");
+  }
+
+  /// Writes ASM to self.output that sets the value of *SP to the contents of the D register
+  fn write_dreg_to_stack(&mut self) {
+    self.writeln("@SP");
+    self.writeln("A=M");
+    self.writeln("M=D");
+  }
+
+  /// Writes ASM to self.output that copies top item on stack to address value at register provided
+  fn write_copy_stack_head_indirect(&mut self, register: &str) {
+    // Copy SP-1 into *register
+    self.writeln("@SP");
+    self.writeln("A=M-1");
+    self.writeln("D=M");
+    self.writeln(&format!("{}", register));
+    self.writeln("A=M");
+    self.writeln("M=D");
   }
 
   fn writeln(&mut self, content: &str) {

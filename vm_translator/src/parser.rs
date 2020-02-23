@@ -29,6 +29,7 @@ impl<'a> Parser<'a> {
   }
 
   pub fn command_type(line: &str) -> CommandType {
+    use BranchingCommand::*;
     use CommandType::*;
     use MathCommand::*;
     use MemoryCommand::*;
@@ -51,6 +52,10 @@ impl<'a> Parser<'a> {
 
       "push" => Memory(Push),
       "pop" => Memory(Pop),
+
+      "label" => Branching(Label),
+      "goto" => Branching(Goto),
+      "if-goto" => Branching(If),
 
       _ => panic!("invalid command: '{}'", line),
     }
