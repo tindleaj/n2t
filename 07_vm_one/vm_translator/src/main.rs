@@ -20,11 +20,11 @@ mod lib {
     use std::io::{Result as IOResult, Write};
     use std::path::Path;
 
-    pub fn parse(contents: &str) -> Vec<u8> {
+    pub fn parse(contents: &str, namespace: &str) -> Vec<u8> {
         use parser::CommandType;
 
         let mut parser = Parser::new(contents);
-        let mut writer = Writer::new();
+        let mut writer = Writer::new(namespace);
 
         while parser.has_more_commands() {
             let line = parser.advance();
@@ -53,39 +53,48 @@ mod lib {
 
     pub fn compile_to_target(input_path: &str, output_path: &str) {
         let input_path = Path::new(input_path);
-        let mut source_string = String::new();
+        let mut output_buffer = Vec::new();
 
         if Path::is_dir(input_path) {
-            let mut source = Vec::new();
-
             fs::read_dir(input_path)
                 .unwrap()
                 .for_each(|result: IOResult<fs::DirEntry>| {
                     let entry = result.unwrap();
-                    let file_name = entry.file_name();
+                    let entry_path = entry.path();
+                    let os_file_name = entry.file_name();
                     let path = entry.path();
+                    let file_name = os_file_name.to_str().expect("problem getting filename");
 
-                    if !file_name.to_str().unwrap().ends_with(".vm") {
+                    let file_stem = entry_path
+                        .file_stem()
+                        .unwrap()
+                        .to_str()
+                        .expect("problem getting file_stem");
+
+                    if !file_name.ends_with(".vm") {
                         panic!("all source files must have the '.vm' extension")
                     }
 
                     let contents =
                         fs::read_to_string(path).expect("problem reading file contents to string");
 
-                    write!(source, "{}", &contents);
+                    output_buffer.append(&mut parse(&contents, file_stem));
                 });
-
-            source_string = String::from_utf8(source).unwrap();
         } else {
-            source_string =
+            let file_stem = input_path
+                .file_stem()
+                .unwrap()
+                .to_str()
+                .expect("problem getting filename");
+            let source =
                 std::fs::read_to_string(input_path).expect("problem reading contents of file");
-        }
 
-        let output = parse(&source_string);
+            output_buffer.append(&mut parse(&source, file_stem));
+        }
 
         fs::File::create(output_path)
             .expect("problem creating output file")
-            .write(&output)
+            .write(&output_buffer)
             .expect("problem writing buffer to output file");
     }
 

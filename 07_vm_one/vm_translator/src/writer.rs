@@ -4,13 +4,15 @@ use std::io::Write;
 
 pub struct Writer {
   pub output: Vec<u8>,
+  pub namespace: String,
   jump_index: usize,
 }
 
 impl Writer {
-  pub fn new() -> Writer {
+  pub fn new(namespace: &str) -> Writer {
     Writer {
       output: Vec::new(),
+      namespace: String::from(namespace),
       jump_index: 0,
     }
   }
@@ -143,12 +145,12 @@ impl Writer {
         D=D-M
         
         // jump if result = 0
-        @EQ_{index}
+        @EQ.{index}
         D;JEQ
-        @NEQ_{index}
+        @NEQ.{index}
         0;JMP
         
-        (EQ_{index})
+        (EQ.{index})
         D=-1
         @SP
         M=M-1
@@ -156,10 +158,10 @@ impl Writer {
         @SP
         A=M
         M=D
-        @END_{index}
+        @END.{index}
         0;JMP
         
-        (NEQ_{index})
+        (NEQ.{index})
         D=0
         @SP
         M=M-1
@@ -168,7 +170,7 @@ impl Writer {
         A=M
         M=D
         
-        (END_{index})
+        (END.{index})
         @SP
         M=M+1",
           index = self.jump_index
@@ -199,12 +201,12 @@ impl Writer {
           D=D-M
           
           // jump if result > 0
-          @GT_{index}
+          @GT.{index}
           D;JGT
-          @NGT_{index}
+          @NGT.{index}
           0;JMP
           
-          (GT_{index})
+          (GT.{index})
           D=-1
           @SP
           M=M-1
@@ -212,10 +214,10 @@ impl Writer {
           @SP
           A=M
           M=D
-          @END_{index}
+          @END.{index}
           0;JMP
           
-          (NGT_{index})
+          (NGT.{index})
           D=0
           @SP
           M=M-1
@@ -224,7 +226,7 @@ impl Writer {
           A=M
           M=D
           
-          (END_{index})
+          (END.{index})
           @SP
           M=M+1",
           index = self.jump_index
@@ -255,12 +257,12 @@ impl Writer {
           D=D-M
           
           // jump if result < 0
-          @LT_{index}
+          @LT.{index}
           D;JLT
-          @NLT_{index}
+          @NLT.{index}
           0;JMP
           
-          (LT_{index})
+          (LT.{index})
           D=-1
           @SP
           M=M-1
@@ -268,10 +270,10 @@ impl Writer {
           @SP
           A=M
           M=D
-          @END_{index}
+          @END.{index}
           0;JMP
           
-          (NLT_{index})
+          (NLT.{index})
           D=0
           @SP
           M=M-1
@@ -280,7 +282,7 @@ impl Writer {
           A=M
           M=D
           
-          (END_{index})
+          (END.{index})
           @SP
           M=M+1",
           index = self.jump_index
@@ -391,7 +393,16 @@ impl Writer {
           self.write_dreg_to_stack();
           self.write_inc_sp();
         }
-        Static => unimplemented!(),
+        Static => {
+          let label = &format!("{}.{}", &self.namespace, index);
+
+          self.writeln(&format!("// push static {}", index));
+          self.writeln(&format!("@{}", label));
+          self.writeln("D=M");
+
+          self.write_dreg_to_stack();
+          self.write_inc_sp();
+        }
         Constant => self.writeln(&format!(
           "// push constant {index}
           // set D to {index}
@@ -485,7 +496,18 @@ impl Writer {
 
           self.write_dec_sp();
         }
-        Static => unimplemented!(),
+        Static => {
+          let label = &format!("{}.{}", &self.namespace, index);
+
+          self.writeln(&format!("// pop static {}", index));
+          self.writeln("@SP");
+          self.writeln("A=M-1");
+          self.writeln("D=M");
+          self.writeln(&format!("@{}", label));
+          self.writeln("M=D");
+
+          self.write_dec_sp();
+        }
         Constant => panic!("cannot pop to the constant segment"),
         This => {
           self.writeln(&format!("// pop this {}", index));
@@ -558,7 +580,7 @@ mod tests {
 
   #[test]
   fn writes_output_with_newlines() {
-    let mut writer = Writer::new();
+    let mut writer = Writer::new("test_namespace");
     writer.writeln("@SP");
     writer.writeln("M=D");
 
