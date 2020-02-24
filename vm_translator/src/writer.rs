@@ -557,11 +557,26 @@ impl Writer {
   pub fn write_goto(&mut self, label: &str) {
     self.writeln(&format!("// goto {}", label));
     self.writeln(&format!("@{}", label));
+    self.writeln("0;JMP");
   }
 
   pub fn write_label(&mut self, label: &str) {
     self.writeln(&format!("// label {}", label));
     self.writeln(&format!("({})", label));
+  }
+
+  pub fn write_function(&mut self, name: &str, num_locals: usize) {
+    dbg!(&name, &num_locals);
+    unimplemented!("write_function")
+  }
+
+  pub fn write_call(&mut self, name: &str, num_args: usize) {
+    dbg!(&name, &num_args);
+    unimplemented!("write_call")
+  }
+
+  pub fn write_return(&mut self) {
+    unimplemented!("write_return")
   }
 
   /// Writes ASM to self.output that increments the stack pointer by 1

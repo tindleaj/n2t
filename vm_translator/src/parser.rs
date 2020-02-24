@@ -31,6 +31,7 @@ impl<'a> Parser<'a> {
   pub fn command_type(line: &str) -> CommandType {
     use BranchingCommand::*;
     use CommandType::*;
+    use FunctionCommand::*;
     use MathCommand::*;
     use MemoryCommand::*;
 
@@ -56,6 +57,10 @@ impl<'a> Parser<'a> {
       "label" => Branching(Label),
       "goto" => Branching(Goto),
       "if-goto" => Branching(If),
+
+      "function" => Function(Declare),
+      "call" => Function(Call),
+      "return" => Function(Return),
 
       _ => panic!("invalid command: '{}'", line),
     }
@@ -118,7 +123,7 @@ pub enum CommandType {
 
 #[derive(PartialEq, Debug)]
 pub enum FunctionCommand {
-  Function,
+  Declare,
   Return,
   Call,
 }

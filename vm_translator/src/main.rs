@@ -54,7 +54,25 @@ mod lib {
                         Goto => writer.write_goto(label),
                     }
                 }
-                _ => unimplemented!(),
+                CommandType::Function(command) => {
+                    use parser::FunctionCommand::*;
+
+                    match command {
+                        Declare => {
+                            let name = Parser::first_arg(line);
+                            let num_locals = Parser::second_arg(line);
+
+                            writer.write_function(name, num_locals);
+                        }
+                        Call => {
+                            let name = Parser::first_arg(line);
+                            let num_args = Parser::second_arg(line);
+
+                            writer.write_call(name, num_args);
+                        }
+                        Return => writer.write_return(),
+                    }
+                }
             }
         }
 

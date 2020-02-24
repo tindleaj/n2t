@@ -1,8 +1,1 @@
-push constant 1
-if-goto life
-goto not_life
-
-label life
-  push constant 42
-label not_life
-  push constant 666
+return
