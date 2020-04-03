@@ -566,8 +566,19 @@ impl Writer {
   }
 
   pub fn write_function(&mut self, name: &str, num_locals: usize) {
-    dbg!(&name, &num_locals);
-    unimplemented!("write_function")
+    self.writeln(&format!("// function {} {}", name, num_locals));
+    self.writeln(&format!("({})", name));
+
+    for _arg in 0..num_locals {
+      self.writeln("// init local");
+      self.writeln("@0");
+      self.writeln("D=A");
+      self.writeln("@SP");
+      self.writeln("A=M");
+      self.writeln("M=D");
+
+      self.write_inc_sp();
+    }
   }
 
   pub fn write_call(&mut self, name: &str, num_args: usize) {
@@ -576,28 +587,111 @@ impl Writer {
   }
 
   pub fn write_return(&mut self) {
-    unimplemented!("write_return")
+    self.writeln("// return");
+
+    // Store the base of the current frame in R13
+    self.writeln("// Store the base of the current frame in R13");
+    self.writeln("@LCL");
+    self.writeln("D=M");
+    self.writeln("@R13");
+    self.writeln("M=D");
+    
+    // Store the return-address in R14
+    self.writeln("// Store the return-address in R14");
+    self.writeln("@R13");
+    self.writeln("D=M");
+    self.writeln("@5");
+    self.writeln("D=D-A");
+    self.writeln("@R14");
+    self.writeln("M=D");
+
+    // Put the return value on top of the caller's stack
+    self.writeln("// Put the return value on top of the caller's stack");
+    self.writeln("@SP");
+    self.writeln("A=M-1");
+    self.writeln("D=M");
+    self.writeln("@ARG");
+    self.writeln("A=M");
+    self.writeln("M=D");
+
+    // Restore SP of caller
+    self.writeln("// Restore SP of caller");
+    self.writeln("@ARG");
+    self.writeln("D=M");
+    self.writeln("@SP");
+    self.writeln("M=D+1");
+
+    // Restore THAT of caller
+    self.writeln("// Restore THAT of caller");
+    self.writeln("@R13");
+    self.writeln("D=M");
+    self.writeln("@1");
+    self.writeln("D=D-A");
+    self.writeln("A=D");
+    self.writeln("D=M");
+    self.writeln("@THAT");
+    self.writeln("M=D");
+
+    // Restore THIS of caller
+    self.writeln("// Restore THIS of caller");
+    self.writeln("@R13");
+    self.writeln("D=M");
+    self.writeln("@2");
+    self.writeln("D=D-A");
+    self.writeln("A=D");
+    self.writeln("D=M");
+    self.writeln("@THIS");
+    self.writeln("M=D");
+
+    // Restore ARG of caller
+    self.writeln("// Restore ARG of caller");
+    self.writeln("@R13");
+    self.writeln("D=M");
+    self.writeln("@3");
+    self.writeln("D=D-A");
+    self.writeln("A=D");
+    self.writeln("D=M");
+    self.writeln("@ARG");
+    self.writeln("M=D");
+
+    // Restore LCL of caller
+    self.writeln("// Restore LCL of caller");
+    self.writeln("@R13");
+    self.writeln("D=M");
+    self.writeln("@4");
+    self.writeln("D=D-A");
+    self.writeln("A=D");
+    self.writeln("D=M");
+    self.writeln("@LCL");
+    self.writeln("M=D");
+
+    // Goto return-address
+    self.writeln("// Goto return address");
+    self.writeln("@R14");
+    self.writeln("A=M");
+    self.writeln("0;JMP")
+
   }
 
-  /// Writes ASM to self.output that increments the stack pointer by 1
+  /// Increments the stack pointer by 1
   fn write_inc_sp(&mut self) {
     self.writeln("@SP");
     self.writeln("M=M+1");
   }
-  /// Writes ASM to self.output that decrements the stack pointer by 1
+  /// Decrements the stack pointer by 1
   fn write_dec_sp(&mut self) {
     self.writeln("@SP");
     self.writeln("M=M-1");
   }
 
-  /// Writes ASM to self.output that sets the value of *SP to the contents of the D register
+  /// Sets the value of *SP to the contents of the D register
   fn write_dreg_to_stack(&mut self) {
     self.writeln("@SP");
     self.writeln("A=M");
     self.writeln("M=D");
   }
 
-  /// Writes ASM to self.output that copies top item on stack to address value at register provided
+  /// Copies top item on stack to address value at register provided
   fn write_copy_stack_head_indirect(&mut self, register: &str) {
     // Copy SP-1 into *register
     self.writeln("@SP");
