@@ -45,13 +45,22 @@ mod lib {
                     writer.write_push_pop(command, segment, index)
                 }
                 CommandType::Branching(command) => {
+                    // Oof
                     use parser::BranchingCommand::*;
-                    let label = Parser::first_arg(line);
+                    let mut label = String::from(Parser::first_arg(line));
+
+                    if writer.call_stack.len() > 0 {
+                        let mut scoped_label = writer.call_stack.first().unwrap().clone();
+                        scoped_label.push_str("$");
+                        scoped_label.push_str(&label);
+
+                        label = scoped_label;
+                    }
 
                     match command {
-                        Label => writer.write_label(label),
-                        If => writer.write_if(label),
-                        Goto => writer.write_goto(label),
+                        Label => writer.write_label(&label),
+                        If => writer.write_if(&label),
+                        Goto => writer.write_goto(&label),
                     }
                 }
                 CommandType::Function(command) => {
@@ -83,6 +92,11 @@ mod lib {
         let input_path = Path::new(input_path);
         let mut output_buffer = Vec::new();
 
+        // Write preamble
+        let mut preamble_writer = Writer::new("Sys");
+        preamble_writer.write_init();
+        output_buffer.append(&mut preamble_writer.output);
+
         if Path::is_dir(input_path) {
             fs::read_dir(input_path)
                 .unwrap()
@@ -100,6 +114,7 @@ mod lib {
                         .expect("problem getting file_stem");
 
                     if !file_name.ends_with(".vm") {
+                        // TODO: Just skip different filetypes
                         panic!("all source files must have the '.vm' extension")
                     }
 

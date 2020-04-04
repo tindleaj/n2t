@@ -12,7 +12,7 @@ impl<'a> Parser<'a> {
   }
 
   pub fn has_more_commands(&self) -> bool {
-    // This seems unoptimal?
+    // This seems suboptimal?
     let mut lookahead = self.lines.clone().peekable();
     match lookahead.peek() {
       Some(_v) => return true,

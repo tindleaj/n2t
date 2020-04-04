@@ -4,6 +4,7 @@ use std::io::Write;
 pub struct Writer {
   pub output: Vec<u8>,
   pub namespace: String,
+  pub call_stack: Vec<String>,
   jump_index: usize,
 }
 
@@ -13,7 +14,39 @@ impl Writer {
       output: Vec::new(),
       namespace: String::from(namespace),
       jump_index: 0,
+      call_stack: Vec::new()
     }
+  }
+
+  /// Writes the bootstrap ASM to the output
+  /// Initializes SP to 256 and calls Sys.init
+  pub fn write_init(&mut self) {
+    self.writeln("@256");
+    self.writeln("D=A");
+    self.writeln("@SP");
+    self.writeln("M=D");
+
+    self.writeln("@1");
+    self.writeln("D=-A");
+    self.writeln("@LCL");
+    self.writeln("M=D");
+
+    self.writeln("@2");
+    self.writeln("D=-A");
+    self.writeln("@ARG");
+    self.writeln("M=D");
+
+    self.writeln("@3");
+    self.writeln("D=-A");
+    self.writeln("@THIS");
+    self.writeln("M=D");
+
+    self.writeln("@4");
+    self.writeln("D=-A");
+    self.writeln("@THAT");
+    self.writeln("M=D");
+
+    self.write_call("Sys.init", 0)
   }
 
   pub fn write_math(&mut self, command: MathCommand) {
@@ -566,6 +599,9 @@ impl Writer {
   }
 
   pub fn write_function(&mut self, name: &str, num_locals: usize) {
+    self.call_stack.push(String::from(name));
+
+
     self.writeln(&format!("// function {} {}", name, num_locals));
     self.writeln(&format!("({})", name));
 
@@ -582,11 +618,63 @@ impl Writer {
   }
 
   pub fn write_call(&mut self, name: &str, num_args: usize) {
-    dbg!(&name, &num_args);
-    unimplemented!("write_call")
+    
+    // Push the return address to the stack
+    self.writeln(&format!("@AFTER_{}", name));
+    self.writeln("D=A");
+    self.write_dreg_to_stack();
+    self.write_inc_sp();
+
+    // Push LCL base address to stack
+    self.writeln("@LCL");
+    self.writeln("D=M");
+    self.write_dreg_to_stack();
+    self.write_inc_sp();
+
+    // Push ARG base address to stack
+    self.writeln("@ARG");
+    self.writeln("D=M");
+    self.write_dreg_to_stack();
+    self.write_inc_sp();
+
+    // Push THIS base address to stack
+    self.writeln("@THIS");
+    self.writeln("D=M");
+    self.write_dreg_to_stack();
+    self.write_inc_sp();
+
+    // Push THAT base address to stack
+    self.writeln("@THAT");
+    self.writeln("D=M");
+    self.write_dreg_to_stack();
+    self.write_inc_sp();
+    
+    // Reposition ARG (ARG = SP-n-5)
+    self.writeln("@SP");
+    self.writeln("D=M");
+    self.writeln(&format!("@{}", num_args));
+    self.writeln("D=D-A");
+    self.writeln("@5");
+    self.writeln("D=D-A");
+    self.writeln("@ARG");
+    self.writeln("M=D");
+
+    // Reposition LCL
+    self.writeln("@SP");
+    self.writeln("D=M");
+    self.writeln("@LCL");
+    self.writeln("M=D");
+
+    // Goto called function
+    self.write_goto(name);
+
+    // Declare return address just after the called function lexically
+    self.writeln(&format!("(AFTER_{})", name));
   }
 
   pub fn write_return(&mut self) {
+    let _ = self.call_stack.pop();
+
     self.writeln("// return");
 
     // Store the base of the current frame in R13
@@ -601,7 +689,8 @@ impl Writer {
     self.writeln("@R13");
     self.writeln("D=M");
     self.writeln("@5");
-    self.writeln("D=D-A");
+    self.writeln("A=D-A");
+    self.writeln("D=M");
     self.writeln("@R14");
     self.writeln("M=D");
 
