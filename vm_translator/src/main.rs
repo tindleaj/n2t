@@ -35,6 +35,8 @@ mod lib {
 
             let command_type = Parser::command_type(line);
 
+            dbg!(&line);
+
             match command_type {
                 CommandType::Math(command) => writer.write_math(command),
                 CommandType::Memory(command) => {
@@ -49,8 +51,8 @@ mod lib {
                     use parser::BranchingCommand::*;
                     let mut label = String::from(Parser::first_arg(line));
 
-                    if writer.call_stack.len() > 0 {
-                        let mut scoped_label = writer.call_stack.first().unwrap().clone();
+                    if !writer.current_function.is_empty() {
+                        let mut scoped_label = String::from(&writer.current_function);
                         scoped_label.push_str("$");
                         scoped_label.push_str(&label);
 

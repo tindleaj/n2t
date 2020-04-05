@@ -4,8 +4,9 @@ use std::io::Write;
 pub struct Writer {
   pub output: Vec<u8>,
   pub namespace: String,
-  pub call_stack: Vec<String>,
+  pub current_function: String,
   jump_index: usize,
+  return_index: usize
 }
 
 impl Writer {
@@ -14,7 +15,8 @@ impl Writer {
       output: Vec::new(),
       namespace: String::from(namespace),
       jump_index: 0,
-      call_stack: Vec::new()
+      current_function: String::new(),
+      return_index: 0
     }
   }
 
@@ -46,7 +48,45 @@ impl Writer {
     self.writeln("@THAT");
     self.writeln("M=D");
 
-    self.write_call("Sys.init", 0)
+    self.write_call("Sys.init", 0);
+    // // Push LCL base address to stack
+    // self.writeln("@LCL");
+    // self.writeln("D=M");
+    // self.write_dreg_to_stack();
+    // self.write_inc_sp();
+
+    // // Push ARG base address to stack
+    // self.writeln("@ARG");
+    // self.writeln("D=M");
+    // self.write_dreg_to_stack();
+    // self.write_inc_sp();
+
+    // // Push THIS base address to stack
+    // self.writeln("@THIS");
+    // self.writeln("D=M");
+    // self.write_dreg_to_stack();
+    // self.write_inc_sp();
+
+    // // Push THAT base address to stack
+    // self.writeln("@THAT");
+    // self.writeln("D=M");
+    // self.write_dreg_to_stack();
+    // self.write_inc_sp();
+    
+    // // Reposition ARG 
+    // self.writeln("@256");
+    // self.writeln("D=A");
+    // self.writeln("@ARG");
+    // self.writeln("M=D");
+
+    // // Reposition LCL
+    // self.writeln("@SP");
+    // self.writeln("D=M");
+    // self.writeln("@LCL");
+    // self.writeln("M=D");
+
+    // // Goto called function
+    // self.write_goto("Sys.init");
   }
 
   pub fn write_math(&mut self, command: MathCommand) {
@@ -573,6 +613,7 @@ impl Writer {
   }
 
   pub fn write_if(&mut self, label: &str) {
+
     self.writeln(&format!("// if-goto {}", label));
 
     // Put value at top of stack in D register
@@ -588,19 +629,20 @@ impl Writer {
   }
 
   pub fn write_goto(&mut self, label: &str) {
+
     self.writeln(&format!("// goto {}", label));
     self.writeln(&format!("@{}", label));
     self.writeln("0;JMP");
   }
 
   pub fn write_label(&mut self, label: &str) {
+
     self.writeln(&format!("// label {}", label));
     self.writeln(&format!("({})", label));
   }
 
   pub fn write_function(&mut self, name: &str, num_locals: usize) {
-    self.call_stack.push(String::from(name));
-
+    self.current_function = String::from(name);
 
     self.writeln(&format!("// function {} {}", name, num_locals));
     self.writeln(&format!("({})", name));
@@ -618,9 +660,11 @@ impl Writer {
   }
 
   pub fn write_call(&mut self, name: &str, num_args: usize) {
+    self.return_index += 1;
+    println!("write_call, @AFTER_{}_{}.{}", name,  &self.namespace,&self.return_index);
     
     // Push the return address to the stack
-    self.writeln(&format!("@AFTER_{}", name));
+    self.writeln(&format!("@AFTER_{}_{}.{}", name,  &self.namespace,&self.return_index));
     self.writeln("D=A");
     self.write_dreg_to_stack();
     self.write_inc_sp();
@@ -669,11 +713,13 @@ impl Writer {
     self.write_goto(name);
 
     // Declare return address just after the called function lexically
-    self.writeln(&format!("(AFTER_{})", name));
+    self.writeln(&format!("(AFTER_{}_{}.{})", name, &self.namespace, &self.return_index));
+
+    
+
   }
 
   pub fn write_return(&mut self) {
-    let _ = self.call_stack.pop();
 
     self.writeln("// return");
 
