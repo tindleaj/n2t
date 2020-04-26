@@ -1,0 +1,17 @@
+function Main.main 0
+push constant 0
+not
+pop static 0
+push constant 0
+pop static 1
+push static 0
+call Screen.setColor 1
+pop temp 0
+push constant 0
+push constant 0
+push constant 10
+push constant 10
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
