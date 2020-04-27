@@ -1,0 +1,127 @@
+function Block.new 0
+push constant 3
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push constant 0
+pop this 2
+push pointer 0
+return
+function Block.show 0
+push argument 0
+pop pointer 0
+push constant 0
+not
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Block.draw 1
+pop temp 0
+push constant 0
+return
+function Block.hide 0
+push argument 0
+pop pointer 0
+push constant 0
+call Screen.setColor 1
+pop temp 0
+push pointer 0
+call Block.draw 1
+pop temp 0
+push constant 0
+return
+function Block.draw 0
+push argument 0
+pop pointer 0
+push this 0
+push this 1
+push this 0
+push constant 20
+add
+push this 1
+push constant 20
+add
+call Screen.drawRectangle 4
+pop temp 0
+push constant 0
+return
+function Block.update 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Block.hide 1
+pop temp 0
+push argument 1
+pop this 0
+push argument 2
+pop this 1
+push pointer 0
+call Block.show 1
+pop temp 0
+push constant 0
+return
+function Block.drop 0
+push argument 0
+pop pointer 0
+push pointer 0
+push this 0
+push this 1
+push constant 10
+add
+call Block.update 3
+pop temp 0
+push pointer 0
+call Block.draw 1
+pop temp 0
+push constant 0
+return
+function Block.is_stuck 0
+push argument 0
+pop pointer 0
+push this 2
+return
+function Block.get_x_origin 0
+push argument 0
+pop pointer 0
+push this 0
+return
+function Block.get_y_origin 0
+push argument 0
+pop pointer 0
+push this 1
+return
+function Block.destroy 0
+push argument 0
+pop pointer 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return
+function Block.collision 0
+push argument 0
+pop pointer 0
+push this 1
+push constant 21
+add
+push argument 2
+gt
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+return
+label IF_FALSE0
+push constant 0
+return
+function Block.set_stuck 0
+push argument 0
+pop pointer 0
+push argument 1
+pop this 2
+push constant 0
+return

@@ -1,16 +1,7 @@
 class Main {
-  static bool BLACK;
-  static bool WHITE;
+    function void main() {
+        do Game.run();
 
-  
-
-  function void main() {
-    let BLACK = true;
-    let WHITE = false;
-
-    do Screen.setColor(BLACK);
-    do Screen.drawRectangle(0, 0, 10, 10);
-    
-    return;
-  }
+        return;
+    }
 }

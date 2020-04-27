@@ -1,0 +1,82 @@
+class Block {
+    field int x_origin;
+    field int y_origin;
+    field bool stuck;
+
+    constructor Block new(int x, int y) {
+        let x_origin = x;
+        let y_origin = y;
+        let stuck = false;
+
+        return this;
+    }
+
+    method void show() {
+        // Set color to black (true)
+        do Screen.setColor(true);
+        do draw();
+
+        return;
+    }
+
+    method void hide() {
+        do Screen.setColor(false);
+        do draw();
+
+        return;
+    }
+
+    method void draw() {
+        do Screen.drawRectangle(x_origin, y_origin, x_origin + 20, y_origin + 20);
+
+        return;
+    }
+
+    method void update(int x, int y) {
+        do hide();
+
+        let x_origin = x;
+        let y_origin = y;
+
+        do show();
+
+        return;
+    }
+
+    method void drop() {
+        do update(x_origin, y_origin + 10);
+        do draw();
+
+        return;
+    }
+
+    method bool is_stuck() {
+        return stuck;
+    }
+
+    method int get_x_origin() {
+        return x_origin;
+    }
+
+    method int get_y_origin() {
+        return y_origin;
+    }
+
+    method void destroy() {
+        do Memory.deAlloc(this);
+        
+        return;
+    }
+
+    method bool collision(int x, int y) {
+        // if ((x_origin + 21) > x) { return true; }
+        if ((y_origin + 21) > y) { return true; }
+
+        return false;
+    }
+
+    method void set_stuck(bool value) {
+        let stuck = value;
+        return;
+    }
+}

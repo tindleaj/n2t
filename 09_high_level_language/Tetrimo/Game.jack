@@ -1,0 +1,37 @@
+// use Block
+
+class Game {
+  static int GAME_SPEED;
+  static int FLOOR;
+  static Array block_arr;
+
+  function void run() {
+    var Block block;
+    var int x_origin, y_origin;
+    var bool collision;
+
+    let FLOOR = 512;
+    let GAME_SPEED = 1000;
+    let block_arr = Array.new(100);
+    let block = Block.new(0, 0);
+
+    while(true) {
+      let collision = block.collision(0, FLOOR);
+
+      if (collision) {
+        do block.set_stuck(true);
+      }
+
+      if (block.is_stuck()) {
+        let block = Block.new(0, 0);
+      }
+
+      do block.drop();
+
+      do Sys.wait(GAME_SPEED);
+    }
+     
+    return;
+  }
+
+}

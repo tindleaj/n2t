@@ -1,0 +1,52 @@
+function Game.run 4
+push constant 512
+pop static 1
+push constant 1000
+pop static 0
+push constant 100
+call Array.new 1
+pop static 2
+push constant 0
+push constant 0
+call Block.new 2
+pop local 0
+label WHILE_EXP0
+push constant 0
+not
+not
+if-goto WHILE_END0
+push local 0
+push constant 0
+push static 1
+call Block.collision 3
+pop local 3
+push local 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 0
+push constant 0
+not
+call Block.set_stuck 2
+pop temp 0
+label IF_FALSE0
+push local 0
+call Block.is_stuck 1
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+push constant 0
+call Block.new 2
+pop local 0
+label IF_FALSE1
+push local 0
+call Block.drop 1
+pop temp 0
+push static 0
+call Sys.wait 1
+pop temp 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
